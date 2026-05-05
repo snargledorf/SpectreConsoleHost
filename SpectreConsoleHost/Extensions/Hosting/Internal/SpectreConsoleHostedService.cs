@@ -14,24 +14,26 @@ namespace Spectre.Console.Extensions.Hosting.Internal
         ILogger<SpectreConsoleHostedService> logger)
         : IHostedService
     {
-        private int _exitCode;
+        private readonly TaskCompletionSource<int> _commandsFinishedEvent = new();
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _ = RunCommandAppsAsync(cancellationToken);
+            _ = RunCommandAppsAsync();
 
             logger.LogDebug("Spectre Console Hosted service is started.");
 
             return Task.CompletedTask;
         }
 
-        private async Task RunCommandAppsAsync(CancellationToken cancellationToken)
+        private async Task RunCommandAppsAsync()
         {
             try
             {
-                IEnumerable<Task> tasks =
-                    commandAppExecuteDelegates.Select((del) => RunCommandAppAsync(del, cancellationToken));
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+                IEnumerable<Task<int>> tasks = commandAppExecuteDelegates.Select(RunCommandAppAsync);
+
+                IEnumerable<int> exitCodes = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                _commandsFinishedEvent.TrySetResult(exitCodes.Last());
             }
             finally
             {
@@ -39,27 +41,25 @@ namespace Spectre.Console.Extensions.Hosting.Internal
             }
         }
 
-        private async Task RunCommandAppAsync(ExecuteCommandAppDelegate executeCommandAppDelegate, CancellationToken cancellationToken)
+        private async Task<int> RunCommandAppAsync(ExecuteCommandAppDelegate executeCommandAppDelegate)
         {
             try
             {
                 logger.LogDebug("Running command app");
-                _exitCode = await executeCommandAppDelegate(cancellationToken).ConfigureAwait(false);
+                return await executeCommandAppDelegate(applicationLifetime.ApplicationStopping).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Unhandled exception");
-                _exitCode = -1;
+                return -1;
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogDebug("Setting exit code: {exitCode}", _exitCode);
-
-            Environment.ExitCode = _exitCode;
-
-            return Task.CompletedTask;
+            int exitCode =  await _commandsFinishedEvent.Task;
+            logger.LogDebug("Setting exit code: {exitCode}", exitCode);
+            Environment.ExitCode = exitCode;
         }
     }
 }
