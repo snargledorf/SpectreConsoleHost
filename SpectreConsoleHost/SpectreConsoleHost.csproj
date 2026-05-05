@@ -11,7 +11,7 @@
         <RepositoryUrl>https://github.com/snargledorf/SpectreConsoleHost.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <Description>A generic host builder for Spectre.Console</Description>
-        <Version>2.0.0</Version>
+        <Version>2.1.0</Version>
         <Nullable>disable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
