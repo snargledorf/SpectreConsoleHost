@@ -18,18 +18,19 @@ namespace Spectre.Console.Extensions.Hosting.Internal
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _ = RunCommandAppsAsync();
+            _ = RunCommandAppsAsync(cancellationToken);
 
             logger.LogDebug("Spectre Console Hosted service is started.");
 
             return Task.CompletedTask;
         }
 
-        private async Task RunCommandAppsAsync()
+        private async Task RunCommandAppsAsync(CancellationToken cancellationToken)
         {
             try
             {
-                IEnumerable<Task> tasks = commandAppExecuteDelegates.Select(RunCommandAppAsync);
+                IEnumerable<Task> tasks =
+                    commandAppExecuteDelegates.Select((del) => RunCommandAppAsync(del, cancellationToken));
                 await Task.WhenAll(tasks).ConfigureAwait(false);
             }
             finally
@@ -38,12 +39,12 @@ namespace Spectre.Console.Extensions.Hosting.Internal
             }
         }
 
-        private async Task RunCommandAppAsync(ExecuteCommandAppDelegate executeCommandAppDelegate)
+        private async Task RunCommandAppAsync(ExecuteCommandAppDelegate executeCommandAppDelegate, CancellationToken cancellationToken)
         {
             try
             {
                 logger.LogDebug("Running command app");
-                _exitCode = await executeCommandAppDelegate().ConfigureAwait(false);
+                _exitCode = await executeCommandAppDelegate(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (!(ex is OperationCanceledException))
             {
