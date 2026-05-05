@@ -46,7 +46,7 @@ namespace Spectre.Console.Extensions.Hosting.Internal
                 logger.LogDebug("Running command app");
                 _exitCode = await executeCommandAppDelegate(cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex) when (!(ex is OperationCanceledException))
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Unhandled exception");
                 _exitCode = -1;
