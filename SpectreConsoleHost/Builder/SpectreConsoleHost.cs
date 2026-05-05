@@ -10,6 +10,6 @@ namespace Spectre.Console.Builder
             return new SpectreConsoleHostBuilder<TDefaultCommand>(args);
         }
 
-        public static SpectreConsoleHostBuilder CreateBuilder(params string[] args) => new SpectreConsoleHostBuilder(args);
+        public static SpectreConsoleHostBuilder CreateBuilder(params string[] args) => new(args);
     }
 }

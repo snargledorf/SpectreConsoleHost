@@ -1,33 +1,32 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Spectre.Console.Cli;
 using Spectre.Console.Cli.Help;
 
 namespace Spectre.Console.Builder.Internal
 {
-    internal class SpectreConsoleHostConfigurator : IConfigurator
+    internal class SpectreConsoleHostConfigurator(ITypeRegistrar typeRegistrar) : IConfigurator
     {
         private readonly List<Action<IConfigurator>> _configureActions = new List<Action<IConfigurator>>();
 
-        public SpectreConsoleHostConfigurator(ITypeRegistrar typeRegistrar)
-        {
-            Settings = new SpectreConsoleHostCommandAppSettings(typeRegistrar);
-        }
-
-        public void SetHelpProvider(IHelpProvider helpProvider)
+        public IConfigurator SetHelpProvider(IHelpProvider helpProvider)
         {
             _configureActions.Add(configurator => configurator.SetHelpProvider(helpProvider));
+            return this;
         }
 
-        public void SetHelpProvider<T>() where T : IHelpProvider
+        public IConfigurator SetHelpProvider<T>() where T : IHelpProvider
         {
             _configureActions.Add(configurator => configurator.SetHelpProvider<T>());
+            return this;
         }
 
-        public void AddExample(params string[] args)
+        public IConfigurator AddExample(params string[] args)
         {
             _configureActions.Add(configurator => configurator.AddExample(args));
+            return this;
         }
 
         public ICommandConfigurator AddCommand<TCommand>(string name) where TCommand : class, ICommand
@@ -39,7 +38,7 @@ namespace Spectre.Console.Builder.Internal
             return addCommandConfigurator;
         }
 
-        public ICommandConfigurator AddDelegate<TSettings>(string name, Func<CommandContext, TSettings, int> func) where TSettings : CommandSettings
+        public ICommandConfigurator AddDelegate<TSettings>(string name, Func<CommandContext, TSettings, CancellationToken, int> func) where TSettings : CommandSettings
         {
             var addDelegateConfigurator = new SpectreConsoleHostCommandConfigurator();
         
@@ -48,7 +47,7 @@ namespace Spectre.Console.Builder.Internal
             return addDelegateConfigurator;
         }
 
-        public ICommandConfigurator AddAsyncDelegate<TSettings>(string name, Func<CommandContext, TSettings, Task<int>> func) where TSettings : CommandSettings
+        public ICommandConfigurator AddAsyncDelegate<TSettings>(string name, Func<CommandContext, TSettings, CancellationToken, Task<int>> func) where TSettings : CommandSettings
         {
             var addAsyncDelegateConfigurator = new SpectreConsoleHostCommandConfigurator();
         
@@ -66,7 +65,7 @@ namespace Spectre.Console.Builder.Internal
             return addBranchConfigurator;
         }
 
-        public ICommandAppSettings Settings { get; }
+        public ICommandAppSettings Settings { get; } = new SpectreConsoleHostCommandAppSettings(typeRegistrar);
 
         public void Configure(IConfigurator configurator)
         {

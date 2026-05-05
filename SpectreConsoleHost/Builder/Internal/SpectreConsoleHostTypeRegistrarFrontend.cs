@@ -3,18 +3,11 @@ using Spectre.Console.Cli;
 
 namespace Spectre.Console.Builder.Internal
 {
-    internal class SpectreConsoleHostTypeRegistrarFrontend : ITypeRegistrarFrontend
+    internal class SpectreConsoleHostTypeRegistrarFrontend(ITypeRegistrar typeRegistrar) : ITypeRegistrarFrontend
     {
-        private readonly ITypeRegistrar _typeRegistrar;
-
-        public SpectreConsoleHostTypeRegistrarFrontend(ITypeRegistrar typeRegistrar)
-        {
-            _typeRegistrar = typeRegistrar;
-        }
-
         public void Register<TService, TImplementation>() where TImplementation : TService
         {
-            _typeRegistrar.Register(typeof(TService), typeof(TImplementation));
+            typeRegistrar.Register(typeof(TService), typeof(TImplementation));
         }
 
         public void RegisterInstance<TImplementation>(TImplementation instance)
@@ -22,7 +15,7 @@ namespace Spectre.Console.Builder.Internal
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
         
-            _typeRegistrar.RegisterInstance(typeof(TImplementation), instance);
+            typeRegistrar.RegisterInstance(typeof(TImplementation), instance);
         }
 
         public void RegisterInstance<TService, TImplementation>(TImplementation instance) where TImplementation : TService
@@ -30,7 +23,7 @@ namespace Spectre.Console.Builder.Internal
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
         
-            _typeRegistrar.RegisterInstance(typeof(TService), instance);
+            typeRegistrar.RegisterInstance(typeof(TService), instance);
         }
     }
 }
