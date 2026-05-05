@@ -36,12 +36,12 @@ namespace Spectre.Console.Extensions.Hosting.Internal
             {
                 provideServiceProvider?.Invoke(sp);
                 
-                return () =>
+                return cancellationToken =>
                 {
                     if (configure != null)
                         commandApp.Configure(configure);
                     
-                    return commandApp.RunAsync(args);
+                    return commandApp.RunAsync(args, cancellationToken);
                 };
             });
             
