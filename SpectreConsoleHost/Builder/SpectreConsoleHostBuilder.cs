@@ -7,17 +7,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Spectre.Console.Builder.Internal;
 using Spectre.Console.Cli;
-using Spectre.Console.Extensions.Hosting;
 using Spectre.Console.Extensions.Hosting.Internal;
 
 namespace Spectre.Console.Builder
 {
-    internal class SpectreConsoleHostBuilder<TDefaultCommand> : SpectreConsoleHostBuilder where TDefaultCommand : class, ICommand
-    {
-        public SpectreConsoleHostBuilder(params string[] args) : base(args, tr => new CommandApp<TDefaultCommand>(tr))
-        {
-        }
-    }
+    internal class SpectreConsoleHostBuilder<TDefaultCommand>(params string[] args)
+        : SpectreConsoleHostBuilder(args, tr => new CommandApp<TDefaultCommand>(tr))
+        where TDefaultCommand : class, ICommand;
 
     public class SpectreConsoleHostBuilder : IHostApplicationBuilder
     {

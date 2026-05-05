@@ -6,15 +6,9 @@ using Spectre.Console.Cli;
 
 namespace Spectre.Console.Extensions.Hosting.Internal
 {
-    internal class SpectreConsoleHostTypeRegistrar : ITypeRegistrar
+    internal class SpectreConsoleHostTypeRegistrar(Func<IServiceProvider> getServiceProvider) : ITypeRegistrar
     {
         private readonly Dictionary<Type, List<Func<IServiceProvider, object>>> _factories = new Dictionary<Type, List<Func<IServiceProvider, object>>>();
-        private readonly Func<IServiceProvider> _getServiceProvider;
-
-        public SpectreConsoleHostTypeRegistrar(Func<IServiceProvider> getServiceProvider)
-        {
-            _getServiceProvider = getServiceProvider;
-        }
 
         public void Register(Type service, Type implementation)
         {
@@ -36,7 +30,7 @@ namespace Spectre.Console.Extensions.Hosting.Internal
         {
             return new SpectreConsoleHostTypeResolver(
                 _factories.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.AsReadOnly()).AsReadOnly(),
-                _getServiceProvider());
+                getServiceProvider());
         }
 
         private List<Func<IServiceProvider, object>> GetFactoryList(Type service)
